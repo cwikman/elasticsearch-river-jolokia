@@ -1,10 +1,9 @@
-Elasticsearch Jolokia JMX monitoring river
+Elasticsearch Jolokia JMX river
 ==========================================
 
-The Jolokia river indexes JMX values into `Elasticsearch <http://www.elasticsearch.org>`_ using `Jolokia <http://www.jolokia.org>`_.
+The Jolokia river indexes JMX values exposed as JSON by `Jolokia <http://www.jolokia.org>` into `Elasticsearch <http://www.elasticsearch.org>`.
 
-It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guide/reference/modules/plugins.html>`_ and it based on
-the `JDBC river <https://github.com/jprante/elasticsearch-river-jdbc>`_. 
+It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guide/reference/modules/plugins.html>`_ and it based on the `JDBC river <https://github.com/jprante/elasticsearch-river-jdbc>`_. 
 
 JMX values can be monitored and analysed in `Kibana <http://www.elasticsearch.org/overview/kibana/>`_.
 
