@@ -9,7 +9,7 @@ and it based on the [JDBC river](<https://github.com/jprante/elasticsearch-river
 JMX values can be monitored and analysed in `Kibana <http://www.elasticsearch.org/overview/kibana/>`_.
 
 
-Creating a Jolokia river is easy::
+Creating a Jolokia river is easy:
 ```
 curl -XPUT localhost:9200/_river/jmx_mem_probe/_meta -d '
 {
