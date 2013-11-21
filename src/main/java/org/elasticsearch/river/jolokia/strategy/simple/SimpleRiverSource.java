@@ -137,11 +137,19 @@ public class SimpleRiverSource implements RiverSource {
 		String objectName = "?";
 		String[] attributes = new String[] {};
 		try {
-			url = getUrl(hostname);
+			String host = getHost(hostname);
+			String port = getPort(hostname);
+			String userName = getUser(hostname);
+			String password = getPassword(hostname);
+			url = getUrl(host + ":" + port);
 			objectName = setting.getObjectName();
 			attributes = getAttributes();
 
-			J4pClient j4pClient = new J4pClient(url);
+			J4pClient j4pClient = useBasicAuth(userName, password) ? J4pClient.url(url)
+					.user(userName)
+					.password(password)
+					.build() : J4pClient.url(url).build();
+
 			J4pReadRequest req = new J4pReadRequest(objectName, attributes);
 
 			logger.info("Executing {}, {}, {}", url, objectName, attributes);
@@ -174,6 +182,53 @@ public class SimpleRiverSource implements RiverSource {
 			} catch (Exception e1) {
 				logger.error("Failed to store error message", e1);
 			}
+		}
+	}
+
+	private boolean useBasicAuth(String userName, String password) {
+		return null != userName && null != password;
+	}
+
+	private String getPassword(String hostname) {
+		String[] parts = hostname.split("@");
+		if(parts.length>1) {
+			String[] authParts = parts[0].split(":");
+			if (authParts.length>1) 
+				return authParts[1];
+		}
+		return null;
+	}
+
+	private String getUser(String hostname) {
+		String[] parts = hostname.split("@");
+		if(parts.length>1) {
+			return parts[0].split(":")[0];
+		}
+		return null;
+	}
+
+	private String getHost(String hostname) {
+		String[] parts = hostname.split("@");
+		if(parts.length>1) {
+			return parts[1].split(":")[0];
+		}
+		return hostname.split(":")[0];
+	}
+	
+	private String getPort(String hostname) {
+		String[] hostParts;
+		String[] parts = hostname.split("@");
+		if(parts.length>1) {
+			hostParts = parts[1].split(":");
+		}
+		else {
+			hostParts = hostname.split(":");
+		}
+		if (hostParts.length>1) { 
+			return hostParts[1];
+		}
+		else {
+			return hostParts[0];
 		}
 	}
 
