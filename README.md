@@ -42,7 +42,7 @@ Prerequisites::
 
 Version | Release date | Command 
 --- | --- | ---
- 1.0.0  | October 1, 2013 | ./bin/plugin -u file:elasticsearch-river-jolokia-1.0.0.zip -i river-jolokia 
+ 1.0.0  | October 1, 2013 | ./bin/plugin -u file:elasticsearch-river-jolokia-1.0.1.zip -i river-jolokia 
 
 
 Bintray:
