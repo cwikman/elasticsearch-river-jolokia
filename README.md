@@ -15,13 +15,15 @@ curl -XPUT localhost:9200/_river/jmx_mem_probe/_meta -d '
 {
     "type" : "jolokia",
     "jolokia" : {
-    "hosts" : ["localhost"],
-    "url" : "http://%s:8080/jolokia",
+    "hosts" : ["admin:password@localhost:8080"],
+    "url" : "http://%s/jolokia",
         "objectName" : "java.lang:type=java.lang",
         "attributes": [ "FreePhysicalMemorySize", "TotalPhysicalMemorySize", "FreeSwapSpaceSize", 
-                        "TotalSwapSpaceSize", "CommittedVirtualMemorySize" ],
+                        {"name"="TotalSwapSpaceSize", transform="function trans(input) {return input;}"}, 
+                        "CommittedVirtualMemorySize" ],
         "logType" : "mem_probe",
-        "poll" : "1m"
+        "poll" : "1m",
+        "onlyUpdates" : "true"
     },
     "index" : {
         "index" : "logstash-[yyyy.MM.dd]",

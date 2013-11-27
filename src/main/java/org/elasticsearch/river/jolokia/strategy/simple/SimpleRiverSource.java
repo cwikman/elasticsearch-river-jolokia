@@ -19,16 +19,24 @@
 package org.elasticsearch.river.jolokia.strategy.simple;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.river.jolokia.JolokiaRiverSetting;
+import org.elasticsearch.river.jolokia.JolokiaRiverSetting.Attribute;
 import org.elasticsearch.river.jolokia.RiverSource;
 import org.elasticsearch.river.jolokia.support.RiverContext;
 import org.elasticsearch.river.jolokia.support.StructuredObject;
@@ -38,6 +46,10 @@ import org.jolokia.client.exception.J4pRemoteException;
 import org.jolokia.client.request.J4pExecRequest;
 import org.jolokia.client.request.J4pReadRequest;
 import org.jolokia.client.request.J4pReadResponse;
+import org.json.simple.JSONValue;
+
+import sun.org.mozilla.javascript.internal.NativeArray;
+import sun.org.mozilla.javascript.internal.NativeObject;
 
 /**
  * A river source implementation for the 'simple' strategy.
@@ -96,12 +108,29 @@ public class SimpleRiverSource implements RiverSource {
 	// private static final String SOURCE_HOST_GRP = "@source_host_grp";
 	// private static final String TAGS = "@tags";
 
-	private String[] getAttributes() {
+	private String[] getAttributeNames() {
 		try {
-			String[] attribs = setting.getAttributes().toArray(new String[] {});
+			String[] attribs = new String[setting.getAttributes().size()];
+			for(int i =0; i<setting.getAttributes().size(); i++) {
+				attribs[i] = setting.getAttributes().get(i).getName();
+			}
 			return attribs;
 		} catch (Exception e) {
 			return new String[] {};
+		}
+	}
+	
+	private Map<String, String> getAttributeTransforms() {
+		try {
+			Map<String, String> mappings = new HashMap<String, String>();
+			for(Attribute attr : setting.getAttributes()) {
+				if (null != attr.getTransform()) {
+					mappings.put(attr.getName(), attr.getTransform());
+				}
+			}
+			return mappings;
+		} catch (Exception e) {
+			return new HashMap<String, String>();
 		}
 	}
 
@@ -135,7 +164,7 @@ public class SimpleRiverSource implements RiverSource {
 	public void fetch(String hostname) {
 		String url = "?";
 		String objectName = "?";
-		String[] attributes = new String[] {};
+		String[] attributeNames = new String[] {};
 		try {
 			String host = getHost(hostname);
 			String port = getPort(hostname);
@@ -143,23 +172,45 @@ public class SimpleRiverSource implements RiverSource {
 			String password = getPassword(hostname);
 			url = getUrl(host + ":" + port);
 			objectName = setting.getObjectName();
-			attributes = getAttributes();
+			Map<String, String> transforms = getAttributeTransforms();
+			
+			attributeNames = getAttributeNames();
 
 			J4pClient j4pClient = useBasicAuth(userName, password) ? J4pClient.url(url)
 					.user(userName)
 					.password(password)
 					.build() : J4pClient.url(url).build();
 
-			J4pReadRequest req = new J4pReadRequest(objectName, attributes);
+			J4pReadRequest req = new J4pReadRequest(objectName, attributeNames);
 
-			logger.info("Executing {}, {}, {}", url, objectName, attributes);
+			logger.info("Executing {}, {}, {}", url, objectName, attributeNames);
 			J4pReadResponse resp = j4pClient.execute(req);
+			
+			if (setting.getOnlyUpdates() && null != resp.asJSONObject().get("value")) {
+				Integer oldValue = setting.getLastValueAsHash();
+				setting.setLastValueAsHash(resp.asJSONObject().get("value").toString().hashCode());
+				if (null != oldValue && oldValue.equals(setting.getLastValueAsHash())) {
+					logger.info("Skipping " + objectName + " since no values has changed");
+					return;
+				}
+			}
 
+			ScriptEngineManager manager = new ScriptEngineManager();
+	        ScriptEngine engine = manager.getEngineByName("rhino");
+			
 			for (ObjectName object : resp.getObjectNames()) {
 				StructuredObject reading = createReading(hostname, getObjectName(object));
-				for (String attrib : attributes) {
+				for (String attrib : attributeNames) {
 					try {
 						Object v = resp.getValue(object, attrib);
+						
+						// Transform
+						if(transforms.containsKey(attrib)) {							
+							String function = transforms.get(attrib).replaceFirst("^\\s*function\\s+([^\\s\\(]+)\\s*\\(.*$" , "$1");
+							engine.eval(transforms.get(attrib));
+							v = convert(engine.eval(function+"("+JSONValue.toJSONString(v)+")"));
+						}
+						
 						reading.source(FIELD_PREFIX + attrib, v);
 					} catch (Exception e) {
 						reading.source(ERROR_PREFIX + attrib, e.getMessage());
@@ -169,7 +220,7 @@ public class SimpleRiverSource implements RiverSource {
 			}
 		} catch (Exception e) {
 			try {
-				logger.info("Failed to execute request {} {} {}", url, objectName, attributes, e);
+				logger.info("Failed to execute request {} {} {}", url, objectName, attributeNames, e);
 				StructuredObject reading = createReading(hostname, setting.getObjectName());
 				reading.source(ERROR_TYPE, e.getClass().getName());
 				reading.source(ERROR, e.getMessage());
@@ -251,5 +302,40 @@ public class SimpleRiverSource implements RiverSource {
 	public RiverSource setting(JolokiaRiverSetting setting) {
 		this.setting = setting;
 		return this;
+	}
+	
+	/**
+	 * Converts NativeArray and NativeObject recursively
+	 * 
+	 * @param object the native object
+	 * @return converted object
+	 */
+	private Object convert(Object object) {
+		if (object instanceof NativeObject) {
+			return convertObject((NativeObject) object);
+		} else if (object instanceof NativeArray) {
+			return convertArray((NativeArray) object);
+		} else {
+			return object;
+		}
+	}
+	
+	private Map<String, Object> convertObject(NativeObject object) {
+		Map<String, Object> mapOutput = new HashMap<String, Object>();
+		for (Object o : object.getIds()) {
+			String key = (String) o;
+			mapOutput.put(key, convert(object.get(key, null)));
+		}
+		
+		return mapOutput;
+	}
+	
+	private List<Object> convertArray(NativeArray array) {
+		List<Object> listOutput = new ArrayList<Object>();
+		for (Object o : array.getIds()) {
+		    int index = (Integer) o;
+		    listOutput.add(convert(array.get(index, null)));
+		}
+		return listOutput;
 	}
 }
