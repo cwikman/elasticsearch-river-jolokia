@@ -41,10 +41,16 @@ public class JolokiaRiverSetting {
 	 *            e.g. "TotalMemory","FreeMemory"
 	 * @return this river source
 	 */	
-	private List<String> attributes;
+	private List<Attribute> attributes;
 	
 	/** Type of log reading, e.g. Probe, DbConnection, etc */
 	private String logType;
+	
+	/** last fetched value as hashvalue */
+	private Integer lastValueAsHash;
+	
+	/** Should mouth only be updated when value from source changes */
+	private Boolean onlyUpdates;
 	
 	public String getLogType() {
 		return logType;
@@ -70,13 +76,59 @@ public class JolokiaRiverSetting {
 	public void setObjectName(String objectName) {
 		this.objectName = objectName;
 	}
-	public List<String> getAttributes() {
+	public List<Attribute> getAttributes() {
 		return attributes;
 	}
-	public void setAttributes(List<String> attributes) {
+	public void setAttributes(List<Attribute> attributes) {
 		this.attributes = attributes;
 	}
-	
-	
+	public Integer getLastValueAsHash() {
+		return lastValueAsHash;
+	}
+	public void setLastValueAsHash(Integer lastValueAsHash) {
+		this.lastValueAsHash = lastValueAsHash;
+	}
+	public Boolean getOnlyUpdates() {
+		if (null == onlyUpdates)
+			return false;
+		return onlyUpdates;
+	}
+	public void setOnlyUpdates(Boolean onlyUpdates) {
+		this.onlyUpdates = onlyUpdates;
+	}
+
+	public static class Attribute {
+		
+		private String name;
+		
+		private String transform;
+		
+		public Attribute(String name) {
+			super();
+			this.name = name;
+		}
+		
+		public Attribute(String name, String transform) {
+			super();
+			this.name = name;
+			this.transform = transform;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getTransform() {
+			return transform;
+		}
+
+		public void setTransform(String transform) {
+			this.transform = transform;
+		}
+	}
 
 }

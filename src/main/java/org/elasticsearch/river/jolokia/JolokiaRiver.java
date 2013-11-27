@@ -37,6 +37,7 @@ import org.elasticsearch.river.River;
 import org.elasticsearch.river.RiverIndexName;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
+import org.elasticsearch.river.jolokia.JolokiaRiverSetting.Attribute;
 import org.elasticsearch.river.jolokia.support.RiverContext;
 import org.elasticsearch.river.jolokia.support.RiverServiceLoader;
 
@@ -73,6 +74,29 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
     private volatile boolean closed;
         
     @SuppressWarnings("unchecked")
+	private List<Attribute> nodeToAttributeList(Object obj, List<Attribute> defaultValue) {
+    	if (null != obj && XContentMapValues.isArray(obj)) {
+    		List<Attribute> res = new ArrayList<Attribute>();
+    		for (Object o : (List<Object>) obj) {
+    			if (o instanceof String) {
+    				res.add(new Attribute(o.toString()));
+    			} else if (o instanceof Map) {
+    				Map<String, Object> oMap = (Map<String, Object>) o;
+    				if (oMap.containsKey("name")) {
+    					if (oMap.containsKey("transform")) {
+    						res.add(new Attribute(oMap.get("name").toString(), oMap.get("transform").toString()));
+    					} else {
+    						res.add(new Attribute(oMap.get("name").toString()));
+    					}
+    				} 				
+    			}
+    		}
+    		return res;
+    	}
+		return defaultValue;
+    }
+    
+    @SuppressWarnings("unchecked")
 	private List<String> nodeToStringList(Object obj, List<String> defaultValue) {
     	if (null != obj && XContentMapValues.isArray(obj)) {
     		List<String> res = new ArrayList<String>();
@@ -80,11 +104,12 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
     			res.add(o.toString());
     		}
     		return res;
-    	} else
-			return defaultValue;
-    }    
+    	}
+		return defaultValue;
+    }
     
-    @Inject
+    @SuppressWarnings("unchecked")
+	@Inject
     public JolokiaRiver(RiverName riverName, RiverSettings riverSettings,
                      @RiverIndexName String riverIndexName,
                      Client client) {
@@ -103,8 +128,9 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
         riverSetting.setHosts(nodeToStringList(sourceSettings.get("hosts"), new ArrayList<String>()));
         riverSetting.setUrl(XContentMapValues.nodeStringValue(sourceSettings.get("url"), null));         
         riverSetting.setObjectName(XContentMapValues.nodeStringValue(sourceSettings.get("objectName"), null));
-        riverSetting.setAttributes(nodeToStringList(sourceSettings.get("attributes"), new ArrayList<String>())); 
+        riverSetting.setAttributes(nodeToAttributeList(sourceSettings.get("attributes"), new ArrayList<Attribute>())); 
         riverSetting.setLogType(XContentMapValues.nodeStringValue(sourceSettings.get("logType"), null));
+        riverSetting.setOnlyUpdates(XContentMapValues.nodeBooleanValue(sourceSettings.get("onlyUpdates"),false));
         
         poll = XContentMapValues.nodeTimeValue(sourceSettings.get("poll"), TimeValue.timeValueMinutes(1));
         maxretries = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_retries"), 3);
