@@ -5,7 +5,7 @@
 
 	<groupId>org.xbib.elasticsearch</groupId>
 	<artifactId>elasticsearch-river-jolokia</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>elasticsearch-river-jolokia</name>
