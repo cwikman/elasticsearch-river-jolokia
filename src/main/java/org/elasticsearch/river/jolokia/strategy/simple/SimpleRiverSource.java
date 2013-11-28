@@ -166,7 +166,7 @@ public class SimpleRiverSource implements RiverSource {
 			String port = getPort(hostname);
 			String userName = getUser(hostname);
 			String password = getPassword(hostname);
-			url = getUrl(host + ":" + port);
+			url = getUrl(null==port?host:(host + ":" + port));
 			objectName = setting.getObjectName();
 			Map<String, String> transforms = getAttributeTransforms();
 			
@@ -275,7 +275,7 @@ public class SimpleRiverSource implements RiverSource {
 			return hostParts[1];
 		}
 		else {
-			return hostParts[0];
+			return null;
 		}
 	}
 
