@@ -24,12 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.common.joda.time.DateTime;
@@ -41,9 +39,7 @@ import org.elasticsearch.river.jolokia.RiverSource;
 import org.elasticsearch.river.jolokia.support.RiverContext;
 import org.elasticsearch.river.jolokia.support.StructuredObject;
 import org.jolokia.client.J4pClient;
-import org.jolokia.client.exception.J4pException;
 import org.jolokia.client.exception.J4pRemoteException;
-import org.jolokia.client.request.J4pExecRequest;
 import org.jolokia.client.request.J4pReadRequest;
 import org.jolokia.client.request.J4pReadResponse;
 import org.json.simple.JSONValue;
