@@ -87,22 +87,23 @@ public class SimpleRiverSource implements RiverSource {
 	}
 
 	private static final String FIELD_SEPERATOR = ".";
-	private static final String FIELD_PREFIX = "@fields" + FIELD_SEPERATOR;
 
-	private static final String ERROR_PREFIX = FIELD_PREFIX + "error" + FIELD_SEPERATOR;
+	private static final String ERROR = "error";
+	
+	private static final String ERROR_PREFIX = ERROR + FIELD_SEPERATOR;
 
 	private static final String TIMESTAMP = "@timestamp";
-	private static final String REQUEST_URL = FIELD_PREFIX + "request";
-	private static final String RESPONSE = FIELD_PREFIX + "response";
-	private static final String ERROR = FIELD_PREFIX + "error";
-	private static final String ERROR_TYPE = FIELD_PREFIX + "error_type";
+	private static final String REQUEST_URL = "request";
+	private static final String RESPONSE = "response";
+	
+	private static final String ERROR_TYPE = "error_type";
 
-	private static final String OBJECT_NAME = FIELD_PREFIX + "objectName";
-	private static final String SOURCE_HOST = "@source_host";
-	private static final String TYPE = "@type";
+	private static final String OBJECT_NAME = "objectName";
+	private static final String HOST = "host";
+	private static final String TYPE = "type";
 
-	// private static final String SOURCE_HOST_GRP = "@source_host_grp";
-	// private static final String TAGS = "@tags";
+	// private static final String HOST_GRP = "host_grp";
+	// private static final String TAGS = "tags";
 
 	private String[] getAttributeNames() {
 		try {
@@ -149,7 +150,7 @@ public class SimpleRiverSource implements RiverSource {
 	private StructuredObject createReading(String hostname, String objectName) {
 		StructuredObject reading = new StructuredObject();
 		reading.source(TIMESTAMP, new DateTime().toDateTimeISO().toString());
-		reading.source(SOURCE_HOST, hostname);
+		reading.source(HOST, hostname);
 		reading.source(REQUEST_URL, getUrl(hostname));
 		reading.source(RESPONSE, HttpStatus.SC_OK);
 		reading.source(OBJECT_NAME, objectName);
@@ -195,7 +196,7 @@ public class SimpleRiverSource implements RiverSource {
 	        ScriptEngine engine = manager.getEngineByName("rhino");
 			
 			for (ObjectName object : resp.getObjectNames()) {
-				StructuredObject reading = createReading(hostname, getObjectName(object));
+				StructuredObject reading = createReading(host, getObjectName(object));
 				for (String attrib : attributeNames) {
 					try {
 						Object v = resp.getValue(object, attrib);
@@ -207,7 +208,7 @@ public class SimpleRiverSource implements RiverSource {
 							v = convert(engine.eval(function+"("+JSONValue.toJSONString(v)+")"));
 						}
 						
-						reading.source(FIELD_PREFIX + attrib, v);
+						reading.source(attrib, v);
 					} catch (Exception e) {
 						reading.source(ERROR_PREFIX + attrib, e.getMessage());
 					}
@@ -217,7 +218,7 @@ public class SimpleRiverSource implements RiverSource {
 		} catch (Exception e) {
 			try {
 				logger.info("Failed to execute request {} {} {}", url, objectName, attributeNames, e);
-				StructuredObject reading = createReading(hostname, setting.getObjectName());
+				StructuredObject reading = createReading(getHost(hostname), setting.getObjectName());
 				reading.source(ERROR_TYPE, e.getClass().getName());
 				reading.source(ERROR, e.getMessage());
 				int rc = HttpStatus.SC_INTERNAL_SERVER_ERROR;

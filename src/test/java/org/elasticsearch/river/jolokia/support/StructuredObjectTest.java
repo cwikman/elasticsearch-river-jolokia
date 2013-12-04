@@ -15,8 +15,8 @@ public class StructuredObjectTest {
 	public void testBuild() throws IOException {
     	StructuredObject reading = new StructuredObject();
     	reading.source("@timestamp", new Date());
-    	reading.source("@fields.request", "URL");    	
-		reading.source("@fields.response", 200);
+    	reading.source("request", "URL");    	
+		reading.source("response", 200);
 		String res = reading.build();
 		assertNotNull(res);
 	}
