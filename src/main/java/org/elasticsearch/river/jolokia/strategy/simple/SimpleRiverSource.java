@@ -20,6 +20,7 @@ package org.elasticsearch.river.jolokia.strategy.simple;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +101,8 @@ public class SimpleRiverSource implements RiverSource {
 
 	private static final String OBJECT_NAME = "objectName";
 	private static final String HOST = "host";
+	private static final String FULL_HOST = "fqdn";
+	private static final String DOMAIN = "domain";
 	private static final String TYPE = "type";
 
 	// private static final String HOST_GRP = "host_grp";
@@ -150,7 +153,9 @@ public class SimpleRiverSource implements RiverSource {
 	private StructuredObject createReading(String hostname, String objectName) {
 		StructuredObject reading = new StructuredObject();
 		reading.source(TIMESTAMP, new DateTime().toDateTimeISO().toString());
-		reading.source(HOST, hostname);
+		reading.source(HOST, getHostPart(hostname));
+		reading.source(FULL_HOST, hostname);
+		reading.source(DOMAIN, getDomainPart(hostname));
 		reading.source(REQUEST_URL, getUrl(hostname));
 		reading.source(RESPONSE, HttpStatus.SC_OK);
 		reading.source(OBJECT_NAME, objectName);
@@ -261,6 +266,25 @@ public class SimpleRiverSource implements RiverSource {
 			return parts[1].split(":")[0];
 		}
 		return hostname.split(":")[0];
+	}
+	
+	private String getDomainPart(String hostname) {
+		String[] parts = hostname.split("\\.");
+		if(parts.length>1) {
+			return join(".", Arrays.copyOfRange(parts, 1, parts.length));
+		}
+		return "";
+	}
+	
+	private static String join(String del, String[] array) {
+		if(array.length>1) {
+			return array[0] + del + join(del, Arrays.copyOfRange(array, 1, array.length));
+		}
+		return array[0];
+	}
+	
+	private String getHostPart(String hostname) {
+		return hostname.split("\\.")[0];
 	}
 	
 	private String getPort(String hostname) {
