@@ -1,6 +1,7 @@
 package org.elasticsearch.river.jolokia;
 
 import java.util.List;
+import java.util.Map;
 
 public class JolokiaRiverSetting {
 	
@@ -37,11 +38,20 @@ public class JolokiaRiverSetting {
 	/**
 	 * This can be a list of Attribute names to be fetched
 	 * 
-	 * @param attributes
+	 * @param constants
 	 *            e.g. "TotalMemory","FreeMemory"
 	 * @return this river source
 	 */	
 	private List<Attribute> attributes;
+	
+	/**
+	 * This can be a map of constants to be added to each event in ES
+	 * 
+	 * @param constants
+	 *            e.g. "TotalMemory" => "100m"
+	 * @return this river source
+	 */	
+	private Map<String, Object> constants;
 	
 	/** Type of log reading, e.g. Probe, DbConnection, etc */
 	private String logType;
@@ -81,6 +91,12 @@ public class JolokiaRiverSetting {
 	}
 	public void setAttributes(List<Attribute> attributes) {
 		this.attributes = attributes;
+	}
+	public Map<String, Object> getConstants() {
+		return constants;
+	}
+	public void setConstants(Map<String, Object> constants) {
+		this.constants = constants;
 	}
 	public Integer getLastValueAsHash() {
 		return lastValueAsHash;

@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.client.Client;
@@ -109,6 +110,14 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
     }
     
     @SuppressWarnings("unchecked")
+	private Map<String,Object> nodeToMap(Object obj, Map<String,Object> defaultValue) {
+    	if (null != obj && XContentMapValues.isObject(obj)) {    		
+    		return (Map<String, Object>) obj;
+    	}
+		return defaultValue;
+    }
+    
+    @SuppressWarnings("unchecked")
 	@Inject
     public JolokiaRiver(RiverName riverName, RiverSettings riverSettings,
                      @RiverIndexName String riverIndexName,
@@ -128,7 +137,8 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
         riverSetting.setHosts(nodeToStringList(sourceSettings.get("hosts"), new ArrayList<String>()));
         riverSetting.setUrl(XContentMapValues.nodeStringValue(sourceSettings.get("url"), null));         
         riverSetting.setObjectName(XContentMapValues.nodeStringValue(sourceSettings.get("objectName"), null));
-        riverSetting.setAttributes(nodeToAttributeList(sourceSettings.get("attributes"), new ArrayList<Attribute>())); 
+        riverSetting.setAttributes(nodeToAttributeList(sourceSettings.get("attributes"), new ArrayList<Attribute>()));
+        riverSetting.setConstants(nodeToMap(sourceSettings.get("constants"), new HashMap<String, Object>()));
         riverSetting.setLogType(XContentMapValues.nodeStringValue(sourceSettings.get("logType"), null));
         riverSetting.setOnlyUpdates(XContentMapValues.nodeBooleanValue(sourceSettings.get("onlyUpdates"),false));
         

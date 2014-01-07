@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.management.ObjectName;
 import javax.script.ScriptEngine;
@@ -105,9 +106,6 @@ public class SimpleRiverSource implements RiverSource {
 	private static final String DOMAIN = "domain";
 	private static final String TYPE = "type";
 
-	// private static final String HOST_GRP = "host_grp";
-	// private static final String TAGS = "tags";
-
 	private String[] getAttributeNames() {
 		try {
 			String[] attribs = new String[setting.getAttributes().size()];
@@ -160,6 +158,9 @@ public class SimpleRiverSource implements RiverSource {
 		reading.source(RESPONSE, HttpStatus.SC_OK);
 		reading.source(OBJECT_NAME, objectName);
 		reading.source(TYPE, setting.getLogType());
+		for (Entry<String, Object> entry : setting.getConstants().entrySet()) {
+			reading.source(entry.getKey(), entry.getValue());
+		}
 		return reading;
 	}
 
