@@ -158,7 +158,7 @@ public class SimpleRiverSource implements RiverSource {
 		reading.source(RESPONSE, HttpStatus.SC_OK);
 		reading.source(OBJECT_NAME, objectName);
 		reading.source(TYPE, setting.getLogType());
-		for (Entry<String, Object> entry : setting.getConstants().entrySet()) {
+		for (Entry<String, Object> entry : setting.getConstants().get(hostname).entrySet()) {
 			reading.source(entry.getKey(), entry.getValue());
 		}
 		return reading;
@@ -169,11 +169,12 @@ public class SimpleRiverSource implements RiverSource {
 		String objectName = "?";
 		String[] attributeNames = new String[] {};
 		try {
+			String catalogue = getCatalogue(hostname);
 			String host = getHost(hostname);
 			String port = getPort(hostname);
 			String userName = getUser(hostname);
 			String password = getPassword(hostname);
-			url = getUrl(null==port?host:(host + ":" + port));
+			url = getUrl((null==port?host:(host + ":" + port))+catalogue);
 			objectName = setting.getObjectName();
 			Map<String, String> transforms = getAttributeTransforms();
 			
@@ -261,16 +262,25 @@ public class SimpleRiverSource implements RiverSource {
 		return null;
 	}
 
+	
+	private String getCatalogue(String hostname) {
+		String[] parts = hostname.split("/",2);
+		if(parts.length>1) {
+			return "/"+parts[1];
+		}
+		return "";
+	}
+	
 	private String getHost(String hostname) {
-		String[] parts = hostname.split("@");
+		String[] parts = hostname.split("/")[0].split("@");
 		if(parts.length>1) {
 			return parts[1].split(":")[0];
 		}
-		return hostname.split(":")[0];
+		return hostname.split("/")[0].split(":")[0];
 	}
 	
 	private String getDomainPart(String hostname) {
-		String[] parts = hostname.split("\\.");
+		String[] parts = hostname.split("/")[0].split("\\.");
 		if(parts.length>1) {
 			return join(".", Arrays.copyOfRange(parts, 1, parts.length));
 		}
@@ -290,12 +300,12 @@ public class SimpleRiverSource implements RiverSource {
 	
 	private String getPort(String hostname) {
 		String[] hostParts;
-		String[] parts = hostname.split("@");
+		String[] parts = hostname.split("/")[0].split("@");
 		if(parts.length>1) {
 			hostParts = parts[1].split(":");
 		}
 		else {
-			hostParts = hostname.split(":");
+			hostParts = hostname.split("/")[0].split(":");
 		}
 		if (hostParts.length>1) { 
 			return hostParts[1];

@@ -38,7 +38,7 @@ public class JolokiaRiverSetting {
 	/**
 	 * This can be a list of Attribute names to be fetched
 	 * 
-	 * @param constants
+	 * @param attributes
 	 *            e.g. "TotalMemory","FreeMemory"
 	 * @return this river source
 	 */	
@@ -51,7 +51,7 @@ public class JolokiaRiverSetting {
 	 *            e.g. "TotalMemory" => "100m"
 	 * @return this river source
 	 */	
-	private Map<String, Object> constants;
+	private Map<String, Map<String, Object>> constants;
 	
 	/** Type of log reading, e.g. Probe, DbConnection, etc */
 	private String logType;
@@ -92,10 +92,10 @@ public class JolokiaRiverSetting {
 	public void setAttributes(List<Attribute> attributes) {
 		this.attributes = attributes;
 	}
-	public Map<String, Object> getConstants() {
+	public Map<String, Map<String, Object>> getConstants() {
 		return constants;
 	}
-	public void setConstants(Map<String, Object> constants) {
+	public void setConstants(Map<String, Map<String, Object>> constants) {
 		this.constants = constants;
 	}
 	public Integer getLastValueAsHash() {

@@ -110,9 +110,9 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
     }
     
     @SuppressWarnings("unchecked")
-	private Map<String,Object> nodeToMap(Object obj, Map<String,Object> defaultValue) {
+	private Map<String,Map<String, Object>> nodeToMap(Object obj, Map<String,Map<String, Object>> defaultValue) {
     	if (null != obj && XContentMapValues.isObject(obj)) {    		
-    		return (Map<String, Object>) obj;
+    		return (Map<String, Map<String, Object>>) obj;
     	}
 		return defaultValue;
     }
@@ -138,7 +138,7 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
         riverSetting.setUrl(XContentMapValues.nodeStringValue(sourceSettings.get("url"), null));         
         riverSetting.setObjectName(XContentMapValues.nodeStringValue(sourceSettings.get("objectName"), null));
         riverSetting.setAttributes(nodeToAttributeList(sourceSettings.get("attributes"), new ArrayList<Attribute>()));
-        riverSetting.setConstants(nodeToMap(sourceSettings.get("constants"), new HashMap<String, Object>()));
+        riverSetting.setConstants(nodeToMap(sourceSettings.get("constants"), new HashMap<String, Map<String, Object>>()));
         riverSetting.setLogType(XContentMapValues.nodeStringValue(sourceSettings.get("logType"), null));
         riverSetting.setOnlyUpdates(XContentMapValues.nodeBooleanValue(sourceSettings.get("onlyUpdates"),false));
         
