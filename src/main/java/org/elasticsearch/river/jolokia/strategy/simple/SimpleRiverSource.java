@@ -215,9 +215,9 @@ public class SimpleRiverSource implements RiverSource {
 							v = convert(engine.eval(function+"("+JSONValue.toJSONString(v)+")"));
 						}
 						
-						reading.source(attrib, v);
+						reading.source(setting.getPrefix() + attrib, v);
 					} catch (Exception e) {
-						reading.source(ERROR_PREFIX + attrib, e.getMessage());
+						reading.source(ERROR_PREFIX + setting.getPrefix() + attrib, e.getMessage());
 					}
 				}
 				createReading(reading);

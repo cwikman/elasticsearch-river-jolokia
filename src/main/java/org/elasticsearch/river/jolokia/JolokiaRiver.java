@@ -138,6 +138,7 @@ public class JolokiaRiver extends AbstractRiverComponent implements River {
         riverSetting.setUrl(XContentMapValues.nodeStringValue(sourceSettings.get("url"), null));         
         riverSetting.setObjectName(XContentMapValues.nodeStringValue(sourceSettings.get("objectName"), null));
         riverSetting.setAttributes(nodeToAttributeList(sourceSettings.get("attributes"), new ArrayList<Attribute>()));
+        riverSetting.setPrefix(XContentMapValues.nodeStringValue(sourceSettings.get("prefix"), ""));
         riverSetting.setConstants(nodeToMap(sourceSettings.get("constants"), new HashMap<String, Map<String, Object>>()));
         riverSetting.setLogType(XContentMapValues.nodeStringValue(sourceSettings.get("logType"), null));
         riverSetting.setOnlyUpdates(XContentMapValues.nodeBooleanValue(sourceSettings.get("onlyUpdates"),false));

@@ -44,6 +44,16 @@ public class JolokiaRiverSetting {
 	 */	
 	private List<Attribute> attributes;
 	
+	
+	/**
+	 * Prefix to add to attribute names when adding them event in ES
+	 * 
+	 * @param prefix
+	 *            e.g. jboss_
+	 * @return this river source
+	 */	
+	private String prefix;
+	
 	/**
 	 * This can be a map of constants to be added to each event in ES
 	 * 
@@ -91,6 +101,12 @@ public class JolokiaRiverSetting {
 	}
 	public void setAttributes(List<Attribute> attributes) {
 		this.attributes = attributes;
+	}
+	public String getPrefix() {
+		return prefix;
+	}
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
 	}
 	public Map<String, Map<String, Object>> getConstants() {
 		return constants;
