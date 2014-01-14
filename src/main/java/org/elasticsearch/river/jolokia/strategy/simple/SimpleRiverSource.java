@@ -148,17 +148,17 @@ public class SimpleRiverSource implements RiverSource {
 		return String.format(setting.getUrl(), hostname);
 	}
 
-	private StructuredObject createReading(String hostname, String objectName) {
+	private StructuredObject createReading(String hostname, String catalogue, String objectName) {
 		StructuredObject reading = new StructuredObject();
 		reading.source(TIMESTAMP, new DateTime().toDateTimeISO().toString());
 		reading.source(HOST, getHostPart(hostname));
 		reading.source(FULL_HOST, hostname);
 		reading.source(DOMAIN, getDomainPart(hostname));
-		reading.source(REQUEST_URL, getUrl(hostname));
+		reading.source(REQUEST_URL, getUrl(hostname + catalogue));
 		reading.source(RESPONSE, HttpStatus.SC_OK);
 		reading.source(OBJECT_NAME, objectName);
 		reading.source(TYPE, setting.getLogType());
-		for (Entry<String, Object> entry : setting.getConstants().get(hostname).entrySet()) {
+		for (Entry<String, Object> entry : setting.getConstants().get(hostname + catalogue).entrySet()) {
 			reading.source(entry.getKey(), entry.getValue());
 		}
 		return reading;
@@ -203,7 +203,7 @@ public class SimpleRiverSource implements RiverSource {
 	        ScriptEngine engine = manager.getEngineByName("rhino");
 			
 			for (ObjectName object : resp.getObjectNames()) {
-				StructuredObject reading = createReading(host, getObjectName(object));
+				StructuredObject reading = createReading(host, catalogue, getObjectName(object));
 				for (String attrib : attributeNames) {
 					try {
 						Object v = resp.getValue(object, attrib);
@@ -225,7 +225,7 @@ public class SimpleRiverSource implements RiverSource {
 		} catch (Exception e) {
 			try {
 				logger.info("Failed to execute request {} {} {}", url, objectName, attributeNames, e);
-				StructuredObject reading = createReading(getHost(hostname), setting.getObjectName());
+				StructuredObject reading = createReading(getHost(hostname), getCatalogue(hostname), setting.getObjectName());
 				reading.source(ERROR_TYPE, e.getClass().getName());
 				reading.source(ERROR, e.getMessage());
 				int rc = HttpStatus.SC_INTERNAL_SERVER_ERROR;
